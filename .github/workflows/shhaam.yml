@@ -1,0 +1,75 @@
+name: Full CI Build
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Display project information
+        run: |
+          echo "================================"
+          echo "Starting CI workflow"
+          echo "Repository: $GITHUB_REPOSITORY"
+          echo "Branch: $GITHUB_REF_NAME"
+          echo "Commit: $GITHUB_SHA"
+          echo "================================"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Check Node.js version
+        run: |
+          node --version
+          npm --version
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build application
+        run: npm run build
+
+      - name: Show build completed
+        run: |
+          echo "================================"
+          echo "BUILD COMPLETED SUCCESSFULLY"
+          echo "================================"
+
+      - name: Upload build files
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-files
+          path: |
+            dist/
+            build/
+          if-no-files-found: ignore
+
+      - name: Workflow summary
+        run: |
+          echo "Workflow: $GITHUB_WORKFLOW"
+          echo "Job: $GITHUB_JOB"
+          echo "Runner: $RUNNER_OS"
+          echo "Status: SUCCESS"
